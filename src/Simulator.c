@@ -15,6 +15,7 @@ InstructionExecutor  pic18ExecutionTable[256]={
            bcf, bcf, bcf, bcf, bcf, bcf, bcf, bcf, 
   [0x80] = bsf, bsf, bsf, bsf, bsf, bsf, bsf, bsf, 
            bsf, bsf, bsf, bsf, bsf, bsf, bsf, bsf, 
+  [0xE0] = bz,
   [0xE1] = bnz,
   [0xE2] = bc,
   [0xE5] = bnov,
@@ -294,6 +295,32 @@ void  bnov(){
   uint8_t n;
   n=(uint8_t) codeptr[0];
   if(status&0x08)
+  { 
+    pc+=2;
+  }else
+    if(n&0x80)
+  {
+    //branch backward
+    n=~n;
+    pc=pc-(n*2);
+  }else{
+  //branch forward
+  pc=pc+(n*2)+2;
+    }
+}
+
+/*
+n (value to branch)           :MSB=1, branch backward and vice versa
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Mnemonic: bz n
+Opcode : 1110 0000 nnnn nnnn
+*/
+void  bz(){
+  // execute the instruction
+  uint8_t *codeptr = &codeMemory[pc];
+  uint8_t n;
+  n=(uint8_t) codeptr[0];
+  if(status&0x04)
   { 
   if(n&0x80)
   {

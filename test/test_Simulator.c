@@ -334,8 +334,8 @@ void  test_bc_given_0xE2F0_status_carry_expect_pc_equals_0xABB0(){
 }
 
 //bc 0x12   1110 0101 0001 0010(0xE512)
-void  test_bc_given_0xE512_status_ov_expect_pc_equals_0xABF4(){
-  status=0x08;
+void  test_bnov_given_0xE512_status_ov_expect_pc_equals_0xABF4(){
+  status=0x00;
   uint8_t machineCode[]={0x12, 0xE5};
   //Copy instruction to code memory
   copyCodeToCodeMemory(machineCode, pc = 0xABCE);
@@ -345,8 +345,8 @@ void  test_bc_given_0xE512_status_ov_expect_pc_equals_0xABF4(){
 }
 
 //bc 0x12   1110 0101 0001 0010(0xE512)
-void  test_bc_given_0xE512_status_xov_expect_pc_equals_0xABF4(){
-  status=0x00;
+void  test_bnov_given_0xE512_status_xov_expect_pc_equals_0xABF4(){
+  status=0x08;
   uint8_t machineCode[]={0x12, 0xE5};
   //Copy instruction to code memory
   copyCodeToCodeMemory(machineCode, pc = 0xABCE);
@@ -356,8 +356,8 @@ void  test_bc_given_0xE512_status_xov_expect_pc_equals_0xABF4(){
 }
 
 //bc 0xE9   1110 0101 1110 1001(0xE5E9)
-void  test_bc_given_0xE512_status_ov_expect_pc_equals_0xABA2(){
-  status=0x08;
+void  test_bnov_given_0xE512_status_ov_expect_pc_equals_0xABA2(){
+  status=0x00;
   uint8_t machineCode[]={0xE9, 0xE5};
   //Copy instruction to code memory
   copyCodeToCodeMemory(machineCode, pc = 0xABCE);
