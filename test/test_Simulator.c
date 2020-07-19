@@ -38,9 +38,30 @@ void  test_add_given_0x7F_and_0x01_expect_N1_OV1_Zx_DC1_Cx(){
   TEST_ASSERT_EQUAL_HEX8(STATUS_N|STATUS_OV|STATUS_DC, status);
 }
 
+// address = 0x62, a = 1
+void  test_computeFileRegAddress_given_0x62_expect_new_address_is_0xF62(){
+  int address = 0x62;
+  address = computeFileRegAddress(0x62, 1);
+  TEST_ASSERT_EQUAL_HEX8(0xF62, address);
+}
+
+// address = 0x35, a = 1
+void  test_computeFileRegAddress_given_0x35_expect_new_address_is_0x35(){
+  int address = 0x35;
+  address = computeFileRegAddress(0x35, 1);
+  TEST_ASSERT_EQUAL_HEX8(0x35, address);
+}
+
+// address = 0x87, a = 0
+void  test_computeFileRegAddress_given_0x87_expect_new_address_is_0x287(){
+  int address = 0x87;
+  bsr = 2;
+  address = computeFileRegAddress(0x87, 0);
+  TEST_ASSERT_EQUAL_HEX8(0x287, address);
+}
 
 //incf 0x03, w, a   0010 1000 0000 0011(0x2803)
-void  test_incf_given_0x2803_expect_N1_OV1_Zx_DC1_Cx(){
+void  test_incf_given_0x2803_expect_N1_OV1_Zx_DC1_Cx_wreg_is_0x80(){
   status = 0x00;
   uint8_t machineCode[]={0x03, 0x28, 0x00, 0xff};
   fileRegisters[0x03]=0x7F;
@@ -54,7 +75,24 @@ void  test_incf_given_0x2803_expect_N1_OV1_Zx_DC1_Cx(){
   TEST_ASSERT_EQUAL_HEX8(STATUS_N|STATUS_OV|STATUS_DC, status);
 }
 
-void test_executeInstruction_given_0x2645_expect_addwf_called(void)
+//incf 0x25, f, a   0010 1010 0010 0101(0x2A25)
+void  test_incf_given_0x2A25_expect_N1_OV1_Zx_DC1_Cx_fileRegister_0x25_is_0x13(){
+  status = 0x00;
+  uint8_t machineCode[]={0x25, 0x2A, 0x00, 0xff};
+  fileRegisters[0x25]=0x12;
+  wreg = 0;
+  //Copy instruction to code memory
+  copyCodeToCodeMemory(machineCode, pc = 0xABCE);
+  //Run the code under test
+  executeInstruction();
+  TEST_ASSERT_EQUAL_HEX8(0x13, fileRegisters[0x25]);
+  TEST_ASSERT_EQUAL_HEX8(0, wreg);
+  TEST_ASSERT_EQUAL_PTR(0xABD0, pc);
+  TEST_ASSERT_EQUAL_HEX8(0x00, status);
+}
+
+//addwf 0x45, f, a  0010 0110 0100 0101(0x2645)
+void test_executeInstruction_given_0x2645_expect_addwf_called_fileregister_0x45_is_0x79(void)
 {
   //Setup the text fixture
   uint8_t machineCode[]={0x45, 0x26, 0x00, 0xff};    //Little endian
@@ -83,7 +121,7 @@ bcf   0x31, 5, ACCESS
 
 
 //addwf 0x23, w, ACCESS ==> 0010 0100 0010 0011 (0x2413)
-void test_executeInstruction_given_0x2413_expect_addwf_called(void)
+void test_executeInstruction_given_0x2413_expect_addwf_called_wreg_is_0xB3(void)
 {
   //Setup the text fixture
   uint8_t machineCode[]={0x13, 0x24, 0x00, 0xff};    //Little endian
@@ -102,7 +140,7 @@ void test_executeInstruction_given_0x2413_expect_addwf_called(void)
 }
 
 //addwf 0x67, w, ACCESS ==> 0010 0100 0010 0011 (0x2467)
-void test_executeInstruction_given_0x2467_expect_addwf_called(void)
+void test_executeInstruction_given_0x2467_expect_addwf_called_wreg_is_0x99(void)
 {
   //Setup the text fixture
   uint8_t machineCode[]={0x67, 0x24, 0x00, 0xff};    //Little endian
@@ -123,7 +161,7 @@ void test_executeInstruction_given_0x2467_expect_addwf_called(void)
 
 
 //addwf 0x8A,w,BANKED
-void test_executeInstruction_given_0x258A_expect_addwf_called(void)
+void test_executeInstruction_given_0x258A_expect_addwf_called_wreg_is_0x85(void)
 {
   //Setup the text fixture
   uint8_t machineCode[]={0x8A, 0x25, 0x00, 0xff};    //Little endian
@@ -132,13 +170,11 @@ void test_executeInstruction_given_0x258A_expect_addwf_called(void)
   //Set BSR
   bsr = 3;
   // Set content of target file register
-    fileRegisters[0x8A] = 0x00;
     fileRegisters[0x38A] = 0x41;
   //Copy instruction to code memory
   copyCodeToCodeMemory(machineCode, pc = 0xABCE);
   //Run the code under test
   executeInstruction();
- 
  // Verify the code has expected output
   TEST_ASSERT_EQUAL_HEX8(0x41,fileRegisters[0x38A]);
   TEST_ASSERT_EQUAL_HEX8(0x85,wreg);
@@ -146,7 +182,7 @@ void test_executeInstruction_given_0x258A_expect_addwf_called(void)
 }
 
 //clrf 0x35, a   0110 1010 0011 0101(0x6A35)
-void  test_clrf_given_0x2803_access_expect_Nx_OVx_Zx_DC0_Cx(){
+void  test_clrf_given_0x2803_access_expect_STATUS_Z_fileRegister_0x35_is_0(){
   status = 0x00;
   uint8_t machineCode[]={0x35, 0x6A, 0x00, 0xff};
   fileRegisters[0x35]=0x71;
@@ -160,7 +196,7 @@ void  test_clrf_given_0x2803_access_expect_Nx_OVx_Zx_DC0_Cx(){
 }
 
 //clrf 0x17, b   0110 1011 0001 0111(0x6B17)
-void  test_clrf_given_0x6B17_banked_expect_Nx_OVx_Zx_DC0_Cx(){
+void  test_clrf_given_0x6B17_banked_expect_STATUS_Z_fileRegister_0x417_is_0(){
   status = 0x00;
   uint8_t machineCode[]={0x17, 0x6B, 0x00, 0xff};
   bsr=4;
@@ -175,7 +211,7 @@ void  test_clrf_given_0x6B17_banked_expect_Nx_OVx_Zx_DC0_Cx(){
 }
 
 //bcf 0x23, 3, a    1001 0110 0010 0011(0x9623)
-void  test_bcf_given_0x6B17_access_expect_0xF7(){
+void  test_bcf_given_0x6B17_access_expect_fileRegister_0x23_is_0xF7(){
   uint8_t machineCode[]={0x23, 0x96, 0x00, 0xff};
   fileRegisters[0x23]=0xFF;
   //Copy instruction to code memory
@@ -187,7 +223,7 @@ void  test_bcf_given_0x6B17_access_expect_0xF7(){
 }
 
 //bcf 0x23, 6, b    1001 1101 0010 0011(0x9D23)
-void  test_bcf_given_0x9D23_access_expect_0xBF(){
+void  test_bcf_given_0x9D23_access_expect_fileRegister_0x823_0xBF(){
   uint8_t machineCode[]={0x23, 0x9D, 0x00, 0xff};
   bsr=8;
   fileRegisters[0x823]=0xFF;
@@ -200,9 +236,8 @@ void  test_bcf_given_0x9D23_access_expect_0xBF(){
 }
 
 //bcf 0x98, 6, a    1001 1100 1001 1000(0x9C98)
-void  test_bcf_given_0x9C98_access_expect_0xBF(){
+void  test_bcf_given_0x9C98_access_expect_fileRegister_0xF98_is_0xBF(){
   uint8_t machineCode[]={0x98, 0x9C, 0x00, 0xff};
-  bsr=8;
   fileRegisters[0xf98]=0xFF;
   //Copy instruction to code memory
   copyCodeToCodeMemory(machineCode, pc = 0xABCE);
@@ -367,7 +402,7 @@ void  test_bnov_given_0xE512_status_ov_expect_pc_equals_0xABA2(){
 }
 
 //movwf 0x37, a    0110 1110 0011 0111(0x6E37)
-void test_movwf_given_0x0x6E37_expect_fileRegisters0x37_equals_0x46(void)
+void test_movwf_given_0x6E37_expect_fileRegisters0x37_equals_0x46(void)
 {
   //Setup the text fixture
   uint8_t machineCode[]={0x37, 0x6E, 0x00, 0xff};    //Little endian
@@ -534,7 +569,7 @@ void test_rlcf_given_0x3436_no_carry_expect_fileRegisters0x70_equals_0x10(void){
   TEST_ASSERT_EQUAL_HEX8(0x0E,fileRegisters[0x36]);
   TEST_ASSERT_EQUAL_HEX8(0x1C,wreg);
   TEST_ASSERT_EQUAL_PTR(0xABD0, pc);
-   // TEST_ASSERT_EQUAL_HEX8(0x00, status);
+  TEST_ASSERT_EQUAL_HEX8(0x00, status);
 }
 
 // rlcf 0x36, w, a     0011 0100 0011 0110(0x3436)
@@ -554,6 +589,6 @@ void test_rlcf_given_0x3436_with_carry_expect_fileRegisters0x70_equals_0x10(void
   TEST_ASSERT_EQUAL_HEX8(0x0E,fileRegisters[0x36]);
   TEST_ASSERT_EQUAL_HEX8(0x1D,wreg);
   TEST_ASSERT_EQUAL_PTR(0xABD0, pc);
-   // TEST_ASSERT_EQUAL_HEX8(0x00, status);
+  TEST_ASSERT_EQUAL_HEX8(0x00, status);
 }
 

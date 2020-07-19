@@ -96,10 +96,10 @@ void  addwf(){
   addr = computeFileRegAddress(addr,  a);
   if(d){
     //d is 1 ==> file register
-    fileRegisters[addr] = fileRegisters[addr] + wreg;
+  fileRegisters[addr] = add(fileRegisters[addr], wreg);
   }else{
     //d is 0
- wreg = fileRegisters[addr] + wreg;
+ wreg = add(fileRegisters[addr], wreg);
   }
   pc+=2;
 }
@@ -120,24 +120,12 @@ void  incf(){
   int d = codeptr[1]&0x02;
   int a = codeptr[1]&0x01;
   addr = computeFileRegAddress(addr,  a);
-  int initialValue=fileRegisters[addr];
-  int finalValue=fileRegisters[addr]+1;
-  if((uint8_t)finalValue==0)
-    status |=STATUS_Z;
-  if((int)finalValue>0xFF)
-    status |= STATUS_C;
-  if((finalValue&0x80)&&!(finalValue>0xFF))
-    status |= STATUS_N;
-  if((((uint8_t)initialValue&0x0F)+0x01>0x0F))
-    status |= STATUS_DC;
-  if(!((uint8_t)initialValue&0x80)&&((uint8_t)finalValue&0x80))
-    status |=STATUS_OV;
   if(d){
     //d is 1 ==> file register
-    fileRegisters[addr] = finalValue;
+    fileRegisters[addr] = add(fileRegisters[addr], 1);
   }else{
     //d is 0
-    wreg = finalValue;
+    wreg = add(fileRegisters[addr], 1);
   }
   pc+=2;
 }
@@ -408,4 +396,12 @@ void  rlcf(){
   wreg = finalValue;
   }
   pc+=2;
+  if(finalValue==0)
+    status |=STATUS_Z;
+  if((finalValue&0x80)&&!(finalValue>0xFF))
+    status |= STATUS_N;
+  if(finalValue>0xFF)
+    status |= STATUS_C;
+  else 
+    status &=0xFE;
 }  
