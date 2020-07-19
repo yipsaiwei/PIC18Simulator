@@ -300,6 +300,72 @@ void  test_bnz_given_0xE1F6_status_zero_expect_pc_equals_0xABBC(){
   TEST_ASSERT_EQUAL_PTR(0xABD0, pc);
 }
 
+//bc 0x34   1110 0010 0011 0100(0xE234)
+void  test_bc_given_0xE234_status_carry_expect_pc_equals_0xAC04(){
+  status=0x01;
+  uint8_t machineCode[]={0x34, 0xE2};
+  //Copy instruction to code memory
+  copyCodeToCodeMemory(machineCode, pc = 0xABCE);
+  //Run the code under test
+  executeInstruction();
+  TEST_ASSERT_EQUAL_PTR(0xAC38, pc);
+}
+
+//bc 0x34   1110 0010 0011 0100(0xE234)
+void  test_bc_given_0xE234_status_xcarry_expect_pc_equals_0xABCE(){
+  status=0x00;
+  uint8_t machineCode[]={0x34, 0xE2};
+  //Copy instruction to code memory
+  copyCodeToCodeMemory(machineCode, pc = 0xABCE);
+  //Run the code under test
+  executeInstruction();
+  TEST_ASSERT_EQUAL_PTR(0xABD0, pc);
+}
+
+//bc 0xF0   1110 0010 1111 0000(0xE2F0)
+void  test_bc_given_0xE2F0_status_carry_expect_pc_equals_0xABB0(){
+  status=0x01;
+  uint8_t machineCode[]={0xF0, 0xE2};
+  //Copy instruction to code memory
+  copyCodeToCodeMemory(machineCode, pc = 0xABCE);
+  //Run the code under test
+  executeInstruction();
+  TEST_ASSERT_EQUAL_PTR(0xABB0, pc);
+}
+
+//bc 0x12   1110 0101 0001 0010(0xE512)
+void  test_bc_given_0xE512_status_ov_expect_pc_equals_0xABF4(){
+  status=0x08;
+  uint8_t machineCode[]={0x12, 0xE5};
+  //Copy instruction to code memory
+  copyCodeToCodeMemory(machineCode, pc = 0xABCE);
+  //Run the code under test
+  executeInstruction();
+  TEST_ASSERT_EQUAL_PTR(0xABF4, pc);
+}
+
+//bc 0x12   1110 0101 0001 0010(0xE512)
+void  test_bc_given_0xE512_status_xov_expect_pc_equals_0xABF4(){
+  status=0x00;
+  uint8_t machineCode[]={0x12, 0xE5};
+  //Copy instruction to code memory
+  copyCodeToCodeMemory(machineCode, pc = 0xABCE);
+  //Run the code under test
+  executeInstruction();
+  TEST_ASSERT_EQUAL_PTR(0xABD0, pc);
+}
+
+//bc 0xE9   1110 0101 1110 1001(0xE5E9)
+void  test_bc_given_0xE512_status_ov_expect_pc_equals_0xABA2(){
+  status=0x08;
+  uint8_t machineCode[]={0xE9, 0xE5};
+  //Copy instruction to code memory
+  copyCodeToCodeMemory(machineCode, pc = 0xABCE);
+  //Run the code under test
+  executeInstruction();
+  TEST_ASSERT_EQUAL_PTR(0xABA2, pc);
+}
+
 //movwf 0x37, a    0110 1110 0011 0111(0x6E37)
 void test_movwf_given_0x0x6E37_expect_fileRegisters0x37_equals_0x46(void)
 {

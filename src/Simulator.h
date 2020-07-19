@@ -30,6 +30,8 @@ void  bcf();
 void  bsf();
 void  bn();
 void  bnz();
+void  bc();
+void  bnov();
 void  movwf();
 void  andwf();
 void  rlcf();

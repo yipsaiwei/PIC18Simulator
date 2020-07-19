@@ -16,6 +16,8 @@ InstructionExecutor  pic18ExecutionTable[256]={
   [0x80] = bsf, bsf, bsf, bsf, bsf, bsf, bsf, bsf, 
            bsf, bsf, bsf, bsf, bsf, bsf, bsf, bsf, 
   [0xE1] = bnz,
+  [0xE2] = bc,
+  [0xE5] = bnov,
   [0xE6] = bn, 
 };
 
@@ -252,6 +254,58 @@ void  bnz(){
   pc=pc+(n*2)+2;
     }
   }
+}
+
+/*
+n (value to branch)           :MSB=1, branch backward and vice versa
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Mnemonic: bc n
+Opcode : 1110 0010 nnnn nnnn
+*/
+void  bc(){
+  // execute the instruction
+  uint8_t *codeptr = &codeMemory[pc];
+  uint8_t n;
+  n=(uint8_t) codeptr[0];
+  if(status&0x01)
+  { 
+  if(n&0x80)
+  {
+    //branch backward
+    n=~n;
+    pc=pc-(n*2);
+  }else{
+  //branch forward
+  pc=pc+(n*2)+2;
+    }
+  }else
+    pc+=2;
+}
+
+/*
+n (value to branch)           :MSB=1, branch backward and vice versa
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Mnemonic: bnov n
+Opcode : 1110 0101 nnnn nnnn
+*/
+void  bnov(){
+  // execute the instruction
+  uint8_t *codeptr = &codeMemory[pc];
+  uint8_t n;
+  n=(uint8_t) codeptr[0];
+  if(status&0x08)
+  { 
+  if(n&0x80)
+  {
+    //branch backward
+    n=~n;
+    pc=pc-(n*2);
+  }else{
+  //branch forward
+  pc=pc+(n*2)+2;
+    }
+  }else
+    pc+=2;
 }
 
 /*
