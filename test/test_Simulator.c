@@ -38,6 +38,13 @@ void  test_add_given_0x7F_and_0x01_expect_N1_OV1_Zx_DC1_Cx(){
   TEST_ASSERT_EQUAL_HEX8(STATUS_N|STATUS_OV|STATUS_DC, status);
 }
 
+void  test_add_given_0x35_and_negative0x37_expect_N1_OVx_Zx_DCx_Cx(){
+  status = 0x00;
+  int value = add(0x35, -0x37);
+  TEST_ASSERT_EQUAL_HEX8(0x35-0x37, value);
+  TEST_ASSERT_EQUAL_HEX8(STATUS_N, status);
+}
+
 // address = 0x62, a = 1
 void  test_computeFileRegAddress_given_0x62_expect_new_address_is_0xF62(){
   int address = 0x62;
@@ -165,6 +172,50 @@ void test_executeInstruction_given_0x258A_expect_addwf_called_wreg_is_0x85(void)
 {
   //Setup the text fixture
   uint8_t machineCode[]={0x8A, 0x25, 0x00, 0xff};    //Little endian
+  //Set WREG
+  wreg = 0x44;
+  //Set BSR
+  bsr = 3;
+  // Set content of target file register
+    fileRegisters[0x38A] = 0x41;
+  //Copy instruction to code memory
+  copyCodeToCodeMemory(machineCode, pc = 0xABCE);
+  //Run the code under test
+  executeInstruction();
+ // Verify the code has expected output
+  TEST_ASSERT_EQUAL_HEX8(0x41,fileRegisters[0x38A]);
+  TEST_ASSERT_EQUAL_HEX8(0x85,wreg);
+  TEST_ASSERT_EQUAL_PTR(0xABD0, pc);
+}
+
+//addwfc 0x8A,w,BANKED 0010 0001 1000 1010(0x218A)
+void test_executeInstruction_given_0x258A_carry1_expect_addwfc_called_wreg_is_0x86(void)
+{
+  //Setup the text fixture
+  uint8_t machineCode[]={0x8A, 0x21, 0x00, 0xff}; //Little endian
+  status = 0x01;  
+  //Set WREG
+  wreg = 0x44;
+  //Set BSR
+  bsr = 3;
+  // Set content of target file register
+    fileRegisters[0x38A] = 0x41;
+  //Copy instruction to code memory
+  copyCodeToCodeMemory(machineCode, pc = 0xABCE);
+  //Run the code under test
+  executeInstruction();
+ // Verify the code has expected output
+  TEST_ASSERT_EQUAL_HEX8(0x41,fileRegisters[0x38A]);
+  TEST_ASSERT_EQUAL_HEX8(0x86,wreg);
+  TEST_ASSERT_EQUAL_PTR(0xABD0, pc);
+}
+
+//addwfc 0x8A,w,BANKED 0010 0001 1000 1010(0x218A)
+void test_executeInstruction_given_0x258A_no_carry_expect_addwfc_called_wreg_is_0x86(void)
+{
+  //Setup the text fixture
+  uint8_t machineCode[]={0x8A, 0x21, 0x00, 0xff}; //Little endian
+  status = 0x00;  
   //Set WREG
   wreg = 0x44;
   //Set BSR
@@ -592,3 +643,71 @@ void test_rlcf_given_0x3436_with_carry_expect_fileRegisters0x70_equals_0x10(void
   TEST_ASSERT_EQUAL_HEX8(0x00, status);
 }
 
+// rlcf 0x58, f, a     0011 0110 0101 1000(0x3658)
+void test_rlcf_given_0x3458_with_carry_expect_fileRegisters0x58_equals_0x3D(void){
+  //Setup the text fixture
+  uint8_t machineCode[]={0x58, 0x36, 0x00, 0xff};    //Little endian
+  //Set WREG
+  status = 0x01;
+  wreg = 0x0F;
+  // Set content of target file register
+    fileRegisters[0x58] = 0x1E;
+  //Copy instruction to code memory
+  copyCodeToCodeMemory(machineCode, pc = 0xABCE);
+  //Run the code under test
+  executeInstruction();
+ // Verify the code has expected output
+  TEST_ASSERT_EQUAL_HEX8(0x3D,fileRegisters[0x58]);
+  TEST_ASSERT_EQUAL_HEX8(0x0F,wreg);
+  TEST_ASSERT_EQUAL_PTR(0xABD0, pc);
+  TEST_ASSERT_EQUAL_HEX8(0x00, status);
+}
+
+//decf 0x26, w, a   0000 0100 0010 0110(0x0426)
+void  test_decf_given_0x0426_expect_N1_OVx_Zx_DCx_Cx_wreg_is_0xFF(){
+  status = 0x00;
+  uint8_t machineCode[]={0x26, 0x04, 0x00, 0xff};
+  fileRegisters[0x03]=0x00;
+  wreg = 0x10;
+  //Copy instruction to code memory
+  copyCodeToCodeMemory(machineCode, pc = 0xABCE);
+  //Run the code under test
+  executeInstruction();
+  TEST_ASSERT_EQUAL_HEX8(0x00, fileRegisters[0x03]);
+  TEST_ASSERT_EQUAL_HEX8(0xFF, wreg);
+  TEST_ASSERT_EQUAL_PTR(0xABD0, pc);
+  TEST_ASSERT_EQUAL_HEX8(STATUS_N, status);
+}
+// decf will always generate DC status since two's complement of -1
+// except the value of 0x00
+//decf 0x35, f, a   0000 0110 0011 0101(0x0635)
+void  test_decf_given_0x0635_expect_N1_OVx_Zx_DC1_Cx_file_register_0x03_is_0x00(){
+  status = 0x00;
+  uint8_t machineCode[]={0x35, 0x06, 0x00, 0xff};
+  fileRegisters[0x35]=0xFF;
+  wreg = 0x10;
+  //Copy instruction to code memory
+  copyCodeToCodeMemory(machineCode, pc = 0xABCE);
+  //Run the code under test
+  executeInstruction();
+  TEST_ASSERT_EQUAL_HEX8(0xFE, fileRegisters[0x35]);
+  TEST_ASSERT_EQUAL_HEX8(0x10, wreg);
+  TEST_ASSERT_EQUAL_PTR(0xABD0, pc);
+  TEST_ASSERT_EQUAL_HEX8(STATUS_N|STATUS_DC, status);
+}
+
+//decf 0x43, f, a   0000 0110 0011 0101(0x0643)
+void  test_decf_given_0x0643_expect_Nx_OVx_Zx_DC1_Cx_file_register_0x35_is_0x11(){
+  status = 0x00;
+  uint8_t machineCode[]={0x35, 0x06, 0x00, 0xff};
+  fileRegisters[0x35]=0x12;
+  wreg = 0x10;
+  //Copy instruction to code memory
+  copyCodeToCodeMemory(machineCode, pc = 0xABCE);
+  //Run the code under test
+  executeInstruction();
+  TEST_ASSERT_EQUAL_HEX8(0x11, fileRegisters[0x35]);
+  TEST_ASSERT_EQUAL_HEX8(0x10, wreg);
+  TEST_ASSERT_EQUAL_PTR(0xABD0, pc);
+  TEST_ASSERT_EQUAL_HEX8(STATUS_DC, status);
+}

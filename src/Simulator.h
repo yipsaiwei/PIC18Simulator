@@ -23,7 +23,9 @@ typedef void  (*InstructionExecutor)(void);
 
 int computeFileRegAddress(int addr, int b);
 void  executeInstruction();
+void  decf();
 void  addwf();
+void  addwfc();
 void  incf();
 void  clrf();
 void  bcf();
