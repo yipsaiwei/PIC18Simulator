@@ -76,7 +76,9 @@ int add(int val1, int val2){
   if((((uint8_t)val1&0x0F)+((uint8_t)val2&0x0F))>0x0F)
     status |= STATUS_DC;
   if(!((uint8_t)val1&0x80)&&!((uint8_t)val2&0x80)&&((uint8_t)val3&0x80))
-    status |=STATUS_OV;   
+    status |=STATUS_OV;  
+  if(((uint8_t)val1&0x80)&&((uint8_t)val2&0x80)&&!((uint8_t)val3&0x80))
+    status |=STATUS_OV; 
   return val3;
 }
 /*
