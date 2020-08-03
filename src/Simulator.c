@@ -5,10 +5,12 @@
 
 
 InstructionExecutor  pic18ExecutionTable[256]={
+  [0x04] = decf, decf, decf, decf,
   [0x14] = andwf, andwf, andwf, andwf,
+  [0x20] = addwfc, addwfc, addwfc, addwfc,
   [0x24] = addwf, addwf, addwf, addwf,
   [0x28] = incf, incf, incf, incf,
-  [0x34] = rlcf, rlcf,
+  [0x34] = rlcf, rlcf, rlcf, rlcf,
   [0x6A] = clrf, clrf,
   [0x6E] = movwf, movwf,
   [0x90] = bcf, bcf, bcf, bcf, bcf, bcf, bcf, bcf, 
@@ -69,9 +71,11 @@ int add(int val1, int val2){
   // Adjust the status flags C, DC, Z, OV, N accordingly
   if((uint8_t)val3==0)
     status |=STATUS_Z;
-    if(val3>0xFF)
+  if(val3>0xFF)
     status |= STATUS_C;
   if((val3&0x80)&&!(val3>0xFF))
+    status |= STATUS_N;
+  if((val1+val2)<0x00)
     status |= STATUS_N;
   if((((uint8_t)val1&0x0F)+((uint8_t)val2&0x0F))>0x0F)
     status |= STATUS_DC;
@@ -106,6 +110,34 @@ void  addwf(){
   pc+=2;
 }
 
+/*
+d (Direction)     :0==>WREG, 1==>bank
+a (BANK)          :0==> ACCESS BANK, 1==>BANK
+f (File register) : range from 0 to 255
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Mnemonic: addwfc f, d, a
+Opcode : 0010 00da ffff ffff
+*/
+void  addwfc(){
+  // execute the instruction
+  uint8_t *codeptr = &codeMemory[pc];
+  int addr = (uint8_t) codeptr[0];
+  int d = codeptr[1]&0x02;
+  int a = codeptr[1]&0x01;
+  addr = computeFileRegAddress(addr,  a);
+  if(d){
+    //d is 1 ==> file register
+    if(status&0x01)
+      wreg+=1;
+    fileRegisters[addr] = add(fileRegisters[addr], wreg);
+  }else{
+    //d is 0
+    if(status&0x01)
+      wreg+=1;
+    wreg = add(fileRegisters[addr], wreg);
+  }
+  pc+=2;
+}
 
 /*
 d (Direction)     :0==>WREG, 1==>bank
@@ -407,3 +439,29 @@ void  rlcf(){
   else 
     status &=0xFE;
 }  
+
+/*
+d (Direction)     :0==>WREG, 1==>bank
+a (BANK)          :0==> ACCESS BANK, 1==>BANK
+f (File register) : range from 0 to 255
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Mnemonic: incf f, d, a
+Opcode : 0000 01da ffff ffff
+*/
+
+void  decf(){
+  // execute the instruction
+  uint8_t *codeptr = &codeMemory[pc];
+  int addr = (uint8_t) codeptr[0];
+  int d = codeptr[1]&0x02;
+  int a = codeptr[1]&0x01;
+  addr = computeFileRegAddress(addr,  a);
+  if(d){
+    //d is 1 ==> file register
+    fileRegisters[addr] = add(fileRegisters[addr], -1);
+  }else{
+    //d is 0
+    wreg = add(fileRegisters[addr], -1);
+  }
+  pc+=2;
+}
